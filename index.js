@@ -20,6 +20,7 @@ function randomIndexTable(order) {
     var randomIndexTable = [0.00, 0.00, 0.58, 0.90, 1.12, 1.24, 1.32, 1.41, 1.45, 1.49, 1.51, 1.48, 1.56, 1.57, 1.59];
     return randomIndexTable[order - 1];
 }
+
 /*  Transposes the matrix, columns become rows */
 function transpose(matrix) {
     return matrix[0].map((col, i) => matrix.map(row => row[i]));
@@ -41,7 +42,7 @@ function calculateConsistencyRatio(req) {
         matrix[numIssues] = rows;
         numIssues++;
     }
-    /* Matrix */
+
     var colsComparisonMatrix = transpose(matrix);
 
     /* 
