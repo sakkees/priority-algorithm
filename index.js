@@ -1,5 +1,3 @@
-// curl localhost:8080 -X POST -H "Content-Type: application/json" -d @testInputData/inputdataExampleNoScale.json
-
 const escapeHtml = require('escape-html');
 
 exports.prioritize = (req, res) => {
