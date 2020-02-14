@@ -1,0 +1,27 @@
+{
+  "name": "Isac",
+
+  "comparisonMatrix": {
+    "issue1": {
+      "values": [
+        1,
+        2,
+        3
+      ]
+    },
+    "issue2": {
+      "values": [
+        4,
+        1,
+        5
+      ]
+    },
+    "issue3": {
+      "values": [
+        6,
+        7,
+        1
+      ]
+    }
+  }
+}
