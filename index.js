@@ -6,8 +6,16 @@ exports.prioritize = (req, res) => {
     console.log("Query: " + JSON.stringify(req.query));
     console.log("Body: " + JSON.stringify(req.body));
     console.log("matrix: " + JSON.stringify(req.body.comparisonMatrix));
-    
-    res.send("Consistency ratio: " + calculateConsistencyRatio(req.body.comparisonMatrix) + "." + " A CR of 0.1 or less is considered acceptable. In practice, however, consistency ratios exceeding 0.10 occur frequently."); // bonus: send eigenvalues 
+    if (req.body.comparisonMatrix == null) {
+      res.send("Matrix is empty");
+    } else {
+      res.send(
+        "Consistency ratio: " +
+          calculateConsistencyRatio(req.body.comparisonMatrix) +
+          "." +
+          " A CR of 0.1 or less is considered acceptable. In practice, however, consistency ratios exceeding 0.10 occur frequently."
+      ); // bonus: send eigenvalues
+    }
 };
 /*
     Table for calculating the consistency ratio.
