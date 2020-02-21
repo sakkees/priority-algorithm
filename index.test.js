@@ -17,6 +17,18 @@ const JSONmatrix = {
   D: { values: [3, 7, 9, 1] }
 };
 
+const JSONnewFormat = { "comparisonMatrix": {
+    "A": {"values": 
+    [{ "B": 5 },{
+       "C": 9},{
+       "D": 0.3333}]},
+    "B": {"values": 
+    [{"C": 0.2},{
+       "D": 0.142857}]},
+    "C": {"values": 
+    [{ "D": 0.1111}]}}
+};
+
 const { randomIndexTable } = require("./index");
 test("Random index table with order 3", () => {
   expect(randomIndexTable(3)).toBe(0.58);
@@ -40,6 +52,12 @@ test("Transposed matrix, columns should be rows", () => {
   expect(JSON.stringify(transpose(matrix))).toBe(JSON.stringify(transposedMatrix));
 });
 
+
 test("Matrix should not be same as itself after transpose", () => {
   expect(JSON.stringify(transpose(matrix))).not.toBe(JSON.stringify(matrix));
+});
+
+const { JSONtoMatrix } = require("./index");
+test("JSONtoMatrix", () => {
+  expect(JSONtoMatrix(JSONnewFormat).toBeNull());
 });

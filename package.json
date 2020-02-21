@@ -11,7 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@google-cloud/functions-framework": "^1.4.0"
+    "@google-cloud/functions-framework": "^1.4.0",
+    "mathjs": "^6.6.0"
   },
   "devDependencies": {
     "jest": "^25.1.0"
