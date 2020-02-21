@@ -1,11 +1,16 @@
 const escapeHtml = require('escape-html');
+const math = require('mathjs')
 
 exports.prioritize = (req, res) => {
-    console.log("Name (query): " + req.query.name);
-    console.log("Name (body): " + req.body.name);
+    /* 
     console.log("Query: " + JSON.stringify(req.query));
     console.log("Body: " + JSON.stringify(req.body));
     console.log("matrix: " + JSON.stringify(req.body.comparisonMatrix));
+    */
+    console.log(req.body.comparisonMatrix);
+    console.log("Stringify comparison matrix: " + JSON.stringify(req.body.comparisonMatrix));
+    res.send(JSON.stringify(JSONtoMatrix(req.body.comparisonMatrix)));
+    /*
     if (req.body.comparisonMatrix == null) {
       res.send("Matrix is empty");
     } else {
@@ -15,7 +20,7 @@ exports.prioritize = (req, res) => {
           "." +
           " A CR of 0.1 or less is considered acceptable. In practice, however, consistency ratios exceeding 0.10 occur frequently."
       ); // bonus: send eigenvalues
-    }
+    }*/
 };
 /*
     Table for calculating the consistency ratio.
@@ -34,13 +39,70 @@ function randomIndexTable(order) {
 function transpose(matrix) {
     return matrix[0].map((col, i) => matrix.map(row => row[i]));
 }
+/* Comparison matrix from JSON as parameter, returns a calculable comparison matrix */
+function JSONtoMatrix(JSONComparisonMatrix) {
+  let matrix = [];
+  let numIssues = 0;
+  let c = math.matrix(); // matrix
+  let row = 0;
+  let column = 0;
+let diagonal = 0;
+  /* Traverses the JSON file and creates a matrix */
+  for (const key in JSONComparisonMatrix) {
+    console.log("key: " + key);
+    let rows = [];
+    let index = 0;
+    rows[index] = 1;
+    index++;
+    column = 0;
 
-/*  AHP algorithm, returns the consistency ratio*/
+    for (const values in JSONComparisonMatrix[key]) {
+      for (const number in JSONComparisonMatrix[key][values]) {
+        for (const val in JSONComparisonMatrix[key][values][number]) {
+          const comparisonVal = JSONComparisonMatrix[key][values][number][val];
+          rows[index] = comparisonVal;
+          if(diagonal > row){
+            c.subset(math.index(row,column), 0);
+          }else{
+            c.subset(math.index(row,column), comparisonVal) ;
+          } 
+          }
+          index++;
+          column++;
+        }
+        diagonal++;
+    }
+    
+    console.log("rows(values): " + JSON.stringify(rows));
+    matrix[numIssues] = rows;
+    numIssues++;
+    row++;
+  }
+    /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
+    the inverse, 1/3 gets put at index [1][2] in the matrix.
+    Also puts value 1 in the diagonal in the matrix */ 
+    for(let x = 0; x < matrix.length; x++){
+        // matrix[x][x] = 1;
+        for(let y = 0; y < matrix.length; y++){  
+            if(matrix[x][y] != 0 ){
+            // matrix[y][x] = Math.pow(matrix[x][y], -1);  
+            } 
+        }
+    }
+  numIssues++;
+  c.resize([numIssues,numIssues]);
+    console.log(c);
+    console.log("numissues: " + numIssues);
+    console.log("matrix: " + JSON.stringify(matrix));
+    return matrix;
+}
+
+/*  Analytic Hierarchy Process algorithm, returns the consistency ratio*/
 function calculateConsistencyRatio(comparisonMatrix) {
     const matrix = [];
     let numIssues = 0;
 
-    /* Comparison matrix */
+    /* Comparison matrix from parameter */
     for (const issue in comparisonMatrix) {
         let rows = [];
         console.log(issue);
@@ -51,11 +113,11 @@ function calculateConsistencyRatio(comparisonMatrix) {
         matrix[numIssues] = rows;
         numIssues++;
     }
-    const colsComparisonMatrix = transpose(matrix);
 
+    const colsComparisonMatrix = transpose(matrix);
     /* 
         Sums up each value in array
-        Example reducer : const array1 = [1, 2, 3, 4]; const reducer = (accumulator, currentValue) => accumulator + currentValue; 
+        Example reducer: const array1 = [1, 2, 3, 4]; const reducer = (accumulator, currentValue) => accumulator + currentValue; 
     */
     let reducer = (accumulator, currentValue) => accumulator + currentValue;
     const sumColsInComparisonMatrix = [];
@@ -115,3 +177,4 @@ function calculateConsistencyRatio(comparisonMatrix) {
 exports.randomIndexTable = randomIndexTable;
 exports.transpose = transpose;
 exports.calculateConsistencyRatio = calculateConsistencyRatio;
+exports.JSONtoMatrix = JSONtoMatrix;
