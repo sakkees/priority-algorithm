@@ -1,6 +1,6 @@
 const escapeHtml = require('escape-html');
 const math = require('mathjs')
-
+// .
 exports.prioritize = (req, res) => {
     /* 
     console.log("Query: " + JSON.stringify(req.query));
