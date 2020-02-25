@@ -1,25 +1,22 @@
-const escapeHtml = require('escape-html');
-const math = require('mathjs')
-// .
+// const escapeHtml = require('escape-html');
+const math = require('mathjs');
+
 exports.prioritize = (req, res) => {
-    /* 
-    console.log("Query: " + JSON.stringify(req.query));
-    console.log("Body: " + JSON.stringify(req.body));
-    console.log("matrix: " + JSON.stringify(req.body.comparisonMatrix));
-    */
     console.log(req.body.comparisonMatrix);
     console.log("Stringify comparison matrix: " + JSON.stringify(req.body.comparisonMatrix));
+    //  res.send("OLD jsonformat: " + JSON.stringify(JSONtoMatrixOLD(req.body.comparisonMatrix)));
     res.send(JSON.stringify(JSONtoMatrix(req.body.comparisonMatrix)));
     /*
     if (req.body.comparisonMatrix == null) {
       res.send("Matrix is empty");
     } else {
+      // should send JSON file with CR and eigenvalues etc.
       res.send(
         "Consistency ratio: " +
           calculateConsistencyRatio(req.body.comparisonMatrix) +
           "." +
           " A CR of 0.1 or less is considered acceptable. In practice, however, consistency ratios exceeding 0.10 occur frequently."
-      ); // bonus: send eigenvalues
+      );
     }*/
 };
 /*
@@ -39,62 +36,34 @@ function randomIndexTable(order) {
 function transpose(matrix) {
     return matrix[0].map((col, i) => matrix.map(row => row[i]));
 }
-/* Comparison matrix from JSON as parameter, returns a calculable comparison matrix */
+/* Comparison matrix from JSON, returns a calculable comparison matrix */ 
 function JSONtoMatrix(JSONComparisonMatrix) {
-  let matrix = [];
-  let numIssues = 0;
-  let c = math.matrix(); // matrix
-  let row = 0;
-  let column = 0;
-let diagonal = 0;
-  /* Traverses the JSON file and creates a matrix */
-  for (const key in JSONComparisonMatrix) {
-    console.log("key: " + key);
-    let rows = [];
-    let index = 0;
-    rows[index] = 1;
-    index++;
-    column = 0;
+  let matrix = math.matrix();
 
-    for (const values in JSONComparisonMatrix[key]) {
-      for (const number in JSONComparisonMatrix[key][values]) {
-        for (const val in JSONComparisonMatrix[key][values][number]) {
-          const comparisonVal = JSONComparisonMatrix[key][values][number][val];
-          rows[index] = comparisonVal;
-          if(diagonal > row){
-            c.subset(math.index(row,column), 0);
-          }else{
-            c.subset(math.index(row,column), comparisonVal) ;
-          } 
-          }
-          index++;
-          column++;
-        }
-        diagonal++;
+  for(const i = 0; i < JSONComparisonMatrix.length; i++){
+    console.log("Object: " + JSONComparisonMatrix[i]);
+    console.log("Name: " + JSONComparisonMatrix[i].name);
+    console.log("Values: " + JSONComparisonMatrix[i].values);
+    let values = JSONComparisonMatrix[i].values;
+    /*console.log("Last value object: " + JSONComparisonMatrix[i].values[values.length-1]);
+    console.log("Last value object name: " + JSONComparisonMatrix[i].values[values.length-1].name);
+    console.log("Last value object value: " + JSONComparisonMatrix[i].values[values.length-1].value);
+    */
+    for(const k = 0; k < values.length; k++){
+      console.log("Last value object: " + JSONComparisonMatrix[i].values[k]);
+      console.log("Last value object name: " + JSONComparisonMatrix[i].values[k].name);
+      console.log("Last value object value: " + JSONComparisonMatrix[i].values[k].value);
     }
-    
-    console.log("rows(values): " + JSON.stringify(rows));
-    matrix[numIssues] = rows;
-    numIssues++;
-    row++;
+    /*
+    for(let valueArr in JSONComparisonMatrix[i].values[i]){
+      console.log(valueArr);
+    }*/
   }
-    /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
-    the inverse, 1/3 gets put at index [1][2] in the matrix.
-    Also puts value 1 in the diagonal in the matrix */ 
-    for(let x = 0; x < matrix.length; x++){
-        // matrix[x][x] = 1;
-        for(let y = 0; y < matrix.length; y++){  
-            if(matrix[x][y] != 0 ){
-            // matrix[y][x] = Math.pow(matrix[x][y], -1);  
-            } 
-        }
-    }
-  numIssues++;
-  c.resize([numIssues,numIssues]);
-    console.log(c);
-    console.log("numissues: " + numIssues);
-    console.log("matrix: " + JSON.stringify(matrix));
-    return matrix;
+  /*
+  for (let property in JSONComparisonMatrix) {
+    console.log(`JSONComparisonMatrix.${property}: ${JSONComparisonMatrix[property]}`);
+  }*/
+  return matrix;
 }
 
 /*  Analytic Hierarchy Process algorithm, returns the consistency ratio*/
@@ -172,6 +141,65 @@ function calculateConsistencyRatio(comparisonMatrix) {
     const consistencyRatio = consistencyIndex / randomIndexTable(numIssues);
     console.log("Consistency Ratio: " + consistencyRatio);
     return consistencyRatio;
+}
+
+/* Comparison matrix from JSON as parameter, returns a calculable comparison matrix */
+function JSONtoMatrixOLD(JSONComparisonMatrix) {
+  let matrix = [];
+  let numIssues = 0;
+  let c = math.matrix(); // matrix
+  let row = 0;
+  let column = 0;
+let diagonal = 0;
+  /* Traverses the JSON file and creates a matrix */
+  for (const key in JSONComparisonMatrix) {
+    console.log("key: " + key);
+    let rows = [];
+    let index = 0;
+    rows[index] = 1;
+    index++;
+    column = 0;
+
+    for (const values in JSONComparisonMatrix[key]) {
+      for (const number in JSONComparisonMatrix[key][values]) {
+        for (const val in JSONComparisonMatrix[key][values][number]) {
+          const comparisonVal = JSONComparisonMatrix[key][values][number][val];
+          rows[index] = comparisonVal;
+          if(diagonal > row){
+            c.subset(math.index(row,column), 0);
+          }else{
+            c.subset(math.index(row,column), comparisonVal) ;
+          } 
+          }
+          index++;
+          column++;
+        }
+        diagonal++;
+    }
+    
+    console.log("rows(values): " + JSON.stringify(rows));
+    matrix[numIssues] = rows;
+    numIssues++;
+    row++;
+  }
+    /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
+    the inverse, 1/3 gets put at index [1][2] in the matrix.
+    Also puts value 1 in the diagonal in the matrix */ 
+    for(let x = 0; x < matrix.length; x++){
+        // matrix[x][x] = 1;
+        for(let y = 0; y < matrix.length; y++){  
+            if(matrix[x][y] != 0 ){
+            // matrix[y][x] = Math.pow(matrix[x][y], -1);  
+            } 
+        }
+    }
+  numIssues++;
+  c.resize([numIssues,numIssues]);
+    console.log(c);
+    // console.log(c._data[0]); Gets the first row(index) in the matrix 
+    console.log("numissues: " + numIssues);
+    console.log("matrix: " + JSON.stringify(matrix));
+    return matrix;
 }
 
 exports.randomIndexTable = randomIndexTable;
