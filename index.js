@@ -36,34 +36,26 @@ function randomIndexTable(order) {
 function transpose(matrix) {
     return matrix[0].map((col, i) => matrix.map(row => row[i]));
 }
+
 /* Comparison matrix from JSON, returns a calculable comparison matrix */ 
 function JSONtoMatrix(JSONComparisonMatrix) {
   let matrix = math.matrix();
-
-  for(const i = 0; i < JSONComparisonMatrix.length; i++){
-    console.log("Object: " + JSONComparisonMatrix[i]);
+  
+  for(let i = 0; i < JSONComparisonMatrix.length; i++){
+    console.log("Object in matrix: " + JSONComparisonMatrix[i]);
     console.log("Name: " + JSONComparisonMatrix[i].name);
-    console.log("Values: " + JSONComparisonMatrix[i].values);
+    console.log("Values (array): " + JSONComparisonMatrix[i].values);
     let values = JSONComparisonMatrix[i].values;
-    /*console.log("Last value object: " + JSONComparisonMatrix[i].values[values.length-1]);
-    console.log("Last value object name: " + JSONComparisonMatrix[i].values[values.length-1].name);
-    console.log("Last value object value: " + JSONComparisonMatrix[i].values[values.length-1].value);
-    */
-    for(const k = 0; k < values.length; k++){
-      console.log("Last value object: " + JSONComparisonMatrix[i].values[k]);
-      console.log("Last value object name: " + JSONComparisonMatrix[i].values[k].name);
-      console.log("Last value object value: " + JSONComparisonMatrix[i].values[k].value);
+    for(let j = 0; j < values.length; j++){
+      matrix.subset(math.index(i,j), JSONComparisonMatrix[i].values[j].value) ;
+      console.log(matrix);
+      console.log("object in values(array): " + JSONComparisonMatrix[i].values[j]);
+      console.log("object name: " + JSONComparisonMatrix[i].values[j].name);
+      console.log("object value: " + JSONComparisonMatrix[i].values[j].value);
     }
-    /*
-    for(let valueArr in JSONComparisonMatrix[i].values[i]){
-      console.log(valueArr);
-    }*/
   }
-  /*
-  for (let property in JSONComparisonMatrix) {
-    console.log(`JSONComparisonMatrix.${property}: ${JSONComparisonMatrix[property]}`);
-  }*/
-  return matrix;
+  // Currently only returns the matrix, no other properties such as size is returned
+  return matrix._data;
 }
 
 /*  Analytic Hierarchy Process algorithm, returns the consistency ratio*/
@@ -91,7 +83,7 @@ function calculateConsistencyRatio(comparisonMatrix) {
     let reducer = (accumulator, currentValue) => accumulator + currentValue;
     const sumColsInComparisonMatrix = [];
     /*  Sums up the column values in the comparison matrix */
-    for (var i = 0; i < colsComparisonMatrix.length; i++) {
+    for (const i = 0; i < colsComparisonMatrix.length; i++) {
         sumColsInComparisonMatrix[i] = colsComparisonMatrix[i].reduce(reducer);
     }
 
@@ -101,9 +93,9 @@ function calculateConsistencyRatio(comparisonMatrix) {
 
     const sumRowsInMatrix = [];
     /*  Divides each value in comparison matrix with its columns sum */
-    for (var i = 0; i < matrix.length; i++) {
+    for (const i = 0; i < matrix.length; i++) {
         let sum = 0;
-        for (var j = 0; j < matrix.length; j++) {
+        for (const j = 0; j < matrix.length; j++) {
             sum += (matrix[i][j] / sumColsInComparisonMatrix[j]);
         }
         sumRowsInMatrix[i] = sum;
@@ -111,8 +103,8 @@ function calculateConsistencyRatio(comparisonMatrix) {
     console.log("sum rows after division: " + JSON.stringify(sumRowsInMatrix));
 
     /* Priority vector is the estimation of eigenvalues of the matrix */
-    var priorityVector = [];
-    for (var i = 0; i < matrix.length; i++) {
+    let priorityVector = [];
+    for (const i = 0; i < matrix.length; i++) {
         priorityVector[i] = (sumRowsInMatrix[i] / numIssues);
     }
     console.log("Priority vector: " + JSON.stringify(priorityVector));
@@ -121,12 +113,12 @@ function calculateConsistencyRatio(comparisonMatrix) {
         Matrix multiplication of matrix and priority vector 
         Each value in the result of the multiplication is divided by the value in priorityVector of the same index
     */
-    var resultMatrixMultiplication = [];
-    var lambdaMaxVector = [];
+    let resultMatrixMultiplication = [];
+    let lambdaMaxVector = [];
     
-    for (var i = 0; i < matrix.length; i++) {
+    for (const i = 0; i < matrix.length; i++) {
         let sum = 0;
-        for (var j = 0; j < matrix.length; j++) {
+        for (const j = 0; j < matrix.length; j++) {
             sum += (matrix[i][j] * priorityVector[j]);
         }
         resultMatrixMultiplication[i] = sum;
@@ -185,9 +177,9 @@ let diagonal = 0;
     /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
     the inverse, 1/3 gets put at index [1][2] in the matrix.
     Also puts value 1 in the diagonal in the matrix */ 
-    for(let x = 0; x < matrix.length; x++){
+    for(const x = 0; x < matrix.length; x++){
         // matrix[x][x] = 1;
-        for(let y = 0; y < matrix.length; y++){  
+        for(const y = 0; y < matrix.length; y++){  
             if(matrix[x][y] != 0 ){
             // matrix[y][x] = Math.pow(matrix[x][y], -1);  
             } 
