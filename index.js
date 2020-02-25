@@ -40,25 +40,37 @@ function transpose(matrix) {
 /* Comparison matrix from JSON, returns a calculable comparison matrix */ 
 function JSONtoMatrix(JSONComparisonMatrix) {
   let matrix = math.matrix();
-  
+  let identityMatrix = math.identity();
+  let diagonal = 0;
+
+  // Puts empty array filled with zeros at last index
+  //  matrix.subset(math.index(JSONComparisonMatrix.length, 0), 0);
+ 
   for(let i = 0; i < JSONComparisonMatrix.length; i++){
+    matrix.subset(math.index(i,diagonal), 1);
+    diagonal++;
     // console.log("Object in matrix: " + JSONComparisonMatrix[i]);
     // console.log("Name: " + JSONComparisonMatrix[i].name);
     // console.log("Values (array): " + JSONComparisonMatrix[i].values);
     let values = JSONComparisonMatrix[i].values;
     for(let j = 0; j < values.length; j++){
-      matrix.subset(math.index(i,j), JSONComparisonMatrix[i].values[j].value) ;
+      matrix.subset(math.index(i,j + diagonal), values[j].value);
       // console.log("object in values(array): " + JSONComparisonMatrix[i].values[j]);
       // console.log("object name: " + JSONComparisonMatrix[i].values[j].name);
       // console.log("object value: " + JSONComparisonMatrix[i].values[j].value);
     }
   }
   console.log(matrix);
+  console.log(identityMatrix);
 
+  /*  if((math.subset(matrix, math.index(j,i))) == 0){
+        matrix.subset(math.index(j,i), Math.pow(values[j].value, -1));
+      }
+  */
   /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
     the inverse, 1/3 gets put at index [1][2] in the matrix.
     Also puts value 1 in the diagonal in the matrix */ 
-    for(const x = 0; x < matrix.length; x++){
+    for(let x = 0; x < matrix._size[0]; x++){
       // matrix[x][x] = 1;
       for(const y = 0; y < matrix.length; y++){  
           if(matrix[x][y] != 0 ){
