@@ -3,8 +3,8 @@ const math = require('mathjs');
 
 exports.prioritize = (req, res) => {
     console.log(req.body.comparisonMatrix);
-    console.log("Stringify comparison matrix: " + JSON.stringify(req.body.comparisonMatrix));
-    //  res.send("OLD jsonformat: " + JSON.stringify(JSONtoMatrixOLD(req.body.comparisonMatrix)));
+    // console.log("Stringify comparison matrix: " + JSON.stringify(req.body.comparisonMatrix));
+    // res.send("OLD jsonformat: " + JSON.stringify(JSONtoMatrixOLD(req.body.comparisonMatrix)));
     res.send(JSON.stringify(JSONtoMatrix(req.body.comparisonMatrix)));
     /*
     if (req.body.comparisonMatrix == null) {
@@ -42,18 +42,31 @@ function JSONtoMatrix(JSONComparisonMatrix) {
   let matrix = math.matrix();
   
   for(let i = 0; i < JSONComparisonMatrix.length; i++){
-    console.log("Object in matrix: " + JSONComparisonMatrix[i]);
-    console.log("Name: " + JSONComparisonMatrix[i].name);
-    console.log("Values (array): " + JSONComparisonMatrix[i].values);
+    // console.log("Object in matrix: " + JSONComparisonMatrix[i]);
+    // console.log("Name: " + JSONComparisonMatrix[i].name);
+    // console.log("Values (array): " + JSONComparisonMatrix[i].values);
     let values = JSONComparisonMatrix[i].values;
     for(let j = 0; j < values.length; j++){
       matrix.subset(math.index(i,j), JSONComparisonMatrix[i].values[j].value) ;
-      console.log(matrix);
-      console.log("object in values(array): " + JSONComparisonMatrix[i].values[j]);
-      console.log("object name: " + JSONComparisonMatrix[i].values[j].name);
-      console.log("object value: " + JSONComparisonMatrix[i].values[j].value);
+      // console.log("object in values(array): " + JSONComparisonMatrix[i].values[j]);
+      // console.log("object name: " + JSONComparisonMatrix[i].values[j].name);
+      // console.log("object value: " + JSONComparisonMatrix[i].values[j].value);
     }
   }
+  console.log(matrix);
+
+  /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
+    the inverse, 1/3 gets put at index [1][2] in the matrix.
+    Also puts value 1 in the diagonal in the matrix */ 
+    for(const x = 0; x < matrix.length; x++){
+      // matrix[x][x] = 1;
+      for(const y = 0; y < matrix.length; y++){  
+          if(matrix[x][y] != 0 ){
+          // matrix[y][x] = Math.pow(matrix[x][y], -1);  
+          } 
+      }
+  }
+
   // Currently only returns the matrix, no other properties such as size is returned
   return matrix._data;
 }
@@ -133,65 +146,6 @@ function calculateConsistencyRatio(comparisonMatrix) {
     const consistencyRatio = consistencyIndex / randomIndexTable(numIssues);
     console.log("Consistency Ratio: " + consistencyRatio);
     return consistencyRatio;
-}
-
-/* Comparison matrix from JSON as parameter, returns a calculable comparison matrix */
-function JSONtoMatrixOLD(JSONComparisonMatrix) {
-  let matrix = [];
-  let numIssues = 0;
-  let c = math.matrix(); // matrix
-  let row = 0;
-  let column = 0;
-let diagonal = 0;
-  /* Traverses the JSON file and creates a matrix */
-  for (const key in JSONComparisonMatrix) {
-    console.log("key: " + key);
-    let rows = [];
-    let index = 0;
-    rows[index] = 1;
-    index++;
-    column = 0;
-
-    for (const values in JSONComparisonMatrix[key]) {
-      for (const number in JSONComparisonMatrix[key][values]) {
-        for (const val in JSONComparisonMatrix[key][values][number]) {
-          const comparisonVal = JSONComparisonMatrix[key][values][number][val];
-          rows[index] = comparisonVal;
-          if(diagonal > row){
-            c.subset(math.index(row,column), 0);
-          }else{
-            c.subset(math.index(row,column), comparisonVal) ;
-          } 
-          }
-          index++;
-          column++;
-        }
-        diagonal++;
-    }
-    
-    console.log("rows(values): " + JSON.stringify(rows));
-    matrix[numIssues] = rows;
-    numIssues++;
-    row++;
-  }
-    /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
-    the inverse, 1/3 gets put at index [1][2] in the matrix.
-    Also puts value 1 in the diagonal in the matrix */ 
-    for(const x = 0; x < matrix.length; x++){
-        // matrix[x][x] = 1;
-        for(const y = 0; y < matrix.length; y++){  
-            if(matrix[x][y] != 0 ){
-            // matrix[y][x] = Math.pow(matrix[x][y], -1);  
-            } 
-        }
-    }
-  numIssues++;
-  c.resize([numIssues,numIssues]);
-    console.log(c);
-    // console.log(c._data[0]); Gets the first row(index) in the matrix 
-    console.log("numissues: " + numIssues);
-    console.log("matrix: " + JSON.stringify(matrix));
-    return matrix;
 }
 
 exports.randomIndexTable = randomIndexTable;
