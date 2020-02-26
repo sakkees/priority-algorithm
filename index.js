@@ -3,21 +3,18 @@ const math = require('mathjs');
 
 exports.prioritize = (req, res) => {
     console.log(req.body.comparisonMatrix);
-    // console.log("Stringify comparison matrix: " + JSON.stringify(req.body.comparisonMatrix));
-    // res.send("OLD jsonformat: " + JSON.stringify(JSONtoMatrixOLD(req.body.comparisonMatrix)));
-    res.send(JSON.stringify(JSONtoMatrix(req.body.comparisonMatrix)));
-    /*
+    let matrix = JSONtoMatrix(req.body.comparisonMatrix);
     if (req.body.comparisonMatrix == null) {
       res.send("Matrix is empty");
     } else {
       // should send JSON file with CR and eigenvalues etc.
       res.send(
         "Consistency ratio: " +
-          calculateConsistencyRatio(req.body.comparisonMatrix) +
+          calculateConsistencyRatio(matrix) +
           "." +
           " A CR of 0.1 or less is considered acceptable. In practice, however, consistency ratios exceeding 0.10 occur frequently."
       );
-    }*/
+    }
 };
 /*
     Table for calculating the consistency ratio.
@@ -34,20 +31,16 @@ function randomIndexTable(order) {
 
 /*  Transposes the matrix, columns become rows */
 function transpose(matrix) {
-    return matrix[0].map((col, i) => matrix.map(row => row[i]));
+    return matrix.map((col, i) => matrix.map(row => row[i]));
 }
 
 /* Comparison matrix from JSON, returns a calculable comparison matrix */ 
 function JSONtoMatrix(JSONComparisonMatrix) {
   let matrix = math.matrix();
-  let identityMatrix = math.identity();
   let diagonal = 0;
 
-  // Puts empty array filled with zeros at last index
-  //  matrix.subset(math.index(JSONComparisonMatrix.length, 0), 0);
- 
   for(let i = 0; i < JSONComparisonMatrix.length; i++){
-    matrix.subset(math.index(i,diagonal), 1);
+    matrix.subset(math.index(i,diagonal), 0);
     diagonal++;
     // console.log("Object in matrix: " + JSONComparisonMatrix[i]);
     // console.log("Name: " + JSONComparisonMatrix[i].name);
@@ -60,24 +53,30 @@ function JSONtoMatrix(JSONComparisonMatrix) {
       // console.log("object value: " + JSONComparisonMatrix[i].values[j].value);
     }
   }
-  console.log(matrix);
-  console.log(identityMatrix);
 
-  /*  if((math.subset(matrix, math.index(j,i))) == 0){
-        matrix.subset(math.index(j,i), Math.pow(values[j].value, -1));
-      }
-  */
-  /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
-    the inverse, 1/3 gets put at index [1][2] in the matrix.
-    Also puts value 1 in the diagonal in the matrix */ 
+  // Adds missing array for last issue which is not present in the JSON but can be calculated with other data in JSON
+  matrix.subset(math.index(matrix._size[0], 0), 0);
+  console.log("Matrix after adding missing array " + matrix);    
+  // Creates an identity matrix ('1' in diagonal of matrix) and adds it in matrix
+  let identityMatrix = math.identity(matrix._size[0]);
+  matrix = math.add(matrix , identityMatrix);
+  console.log("identity matrix: " + identityMatrix);
+  console.log("Matrix after add with identity matrix " + matrix);    
+
+    /* Puts the inverse value in the inverse index in the matrix. Example: value at index [2][1] is 3, 
+    the inverse, 1/3 gets put at index [1][2] in the matrix. */ 
     for(let x = 0; x < matrix._size[0]; x++){
-      // matrix[x][x] = 1;
-      for(const y = 0; y < matrix.length; y++){  
-          if(matrix[x][y] != 0 ){
-          // matrix[y][x] = Math.pow(matrix[x][y], -1);  
+      for(let y = 0; y < matrix._size[0]; y++){  
+          if(matrix._data[x][y] != 0 && matrix._data[y][x] == 0){
+              if(matrix._data[x][y] < 1){
+                matrix._data[y][x] = Math.round((Math.pow(matrix._data[x][y], -1) + Number.EPSILON) * 100) / 100;
+              }else{
+                matrix._data[y][x] = Math.pow(matrix._data[x][y], -1);
+              }
           } 
       }
-  }
+    }
+  console.log("matrix after pow " + matrix);
 
   // Currently only returns the matrix, no other properties such as size is returned
   return matrix._data;
@@ -85,22 +84,10 @@ function JSONtoMatrix(JSONComparisonMatrix) {
 
 /*  Analytic Hierarchy Process algorithm, returns the consistency ratio*/
 function calculateConsistencyRatio(comparisonMatrix) {
-    const matrix = [];
-    let numIssues = 0;
+    let numIssues = comparisonMatrix.length;
 
-    /* Comparison matrix from parameter */
-    for (const issue in comparisonMatrix) {
-        let rows = [];
-        console.log(issue);
-        for (const value in comparisonMatrix[issue]) {
-            rows = comparisonMatrix[issue][value];
-            console.log(JSON.stringify(rows));
-        }
-        matrix[numIssues] = rows;
-        numIssues++;
-    }
-
-    const colsComparisonMatrix = transpose(matrix);
+    console.log(comparisonMatrix);
+    const colsComparisonMatrix = transpose(comparisonMatrix);
     /* 
         Sums up each value in array
         Example reducer: const array1 = [1, 2, 3, 4]; const reducer = (accumulator, currentValue) => accumulator + currentValue; 
@@ -108,20 +95,20 @@ function calculateConsistencyRatio(comparisonMatrix) {
     let reducer = (accumulator, currentValue) => accumulator + currentValue;
     const sumColsInComparisonMatrix = [];
     /*  Sums up the column values in the comparison matrix */
-    for (const i = 0; i < colsComparisonMatrix.length; i++) {
+    for (let i = 0; i < colsComparisonMatrix.length; i++) {
         sumColsInComparisonMatrix[i] = colsComparisonMatrix[i].reduce(reducer);
     }
 
-    console.log("matrix: " + JSON.stringify(matrix));
+    console.log("matrix: " + JSON.stringify(comparisonMatrix));
     console.log("Transposed matrix: " + JSON.stringify(colsComparisonMatrix));
     console.log("sum cols: " + JSON.stringify(sumColsInComparisonMatrix));
 
     const sumRowsInMatrix = [];
     /*  Divides each value in comparison matrix with its columns sum */
-    for (const i = 0; i < matrix.length; i++) {
+    for (let i = 0; i < comparisonMatrix.length; i++) {
         let sum = 0;
-        for (const j = 0; j < matrix.length; j++) {
-            sum += (matrix[i][j] / sumColsInComparisonMatrix[j]);
+        for (let j = 0; j < comparisonMatrix.length; j++) {
+            sum += (comparisonMatrix[i][j] / sumColsInComparisonMatrix[j]);
         }
         sumRowsInMatrix[i] = sum;
     }
@@ -129,7 +116,7 @@ function calculateConsistencyRatio(comparisonMatrix) {
 
     /* Priority vector is the estimation of eigenvalues of the matrix */
     let priorityVector = [];
-    for (const i = 0; i < matrix.length; i++) {
+    for (let i = 0; i < comparisonMatrix.length; i++) {
         priorityVector[i] = (sumRowsInMatrix[i] / numIssues);
     }
     console.log("Priority vector: " + JSON.stringify(priorityVector));
@@ -141,10 +128,10 @@ function calculateConsistencyRatio(comparisonMatrix) {
     let resultMatrixMultiplication = [];
     let lambdaMaxVector = [];
     
-    for (const i = 0; i < matrix.length; i++) {
+    for (let i = 0; i < comparisonMatrix.length; i++) {
         let sum = 0;
-        for (const j = 0; j < matrix.length; j++) {
-            sum += (matrix[i][j] * priorityVector[j]);
+        for (let j = 0; j < comparisonMatrix.length; j++) {
+            sum += (comparisonMatrix[i][j] * priorityVector[j]);
         }
         resultMatrixMultiplication[i] = sum;
         lambdaMaxVector[i] = resultMatrixMultiplication[i] / priorityVector[i];
