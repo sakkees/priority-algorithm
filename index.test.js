@@ -42,9 +42,9 @@ test("Random index table with order 20", () => {
   expect(randomIndexTable(20)).toBe(0);
 });
 
-const { calculateConsistencyRatio } = require("./index");
+const { analyticHierarchyProcess } = require("./index");
 test("Example matrix with scale, CR = 0.2886 ", () => {
-  expect(calculateConsistencyRatio(JSONmatrix)).toBeCloseTo(0.2886, 4);
+  expect(analyticHierarchyProcess(JSONmatrix)).toBeCloseTo(0.2886, 4);
 });
 
 const { transpose } = require("./index");
